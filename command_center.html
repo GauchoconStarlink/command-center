@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Member Command Center — Decentralized Masters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0d1117;color:#fff;font-family:'DM Mono','Fira Mono','Courier New',monospace;min-height:100vh;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:#0d1117;}
+::-webkit-scrollbar-thumb{background:#3d444d;border-radius:3px;}
+input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const {useState,useMemo,useEffect,useCallback}=React;
+
+const BG="#0d1117",BG2="#161b22",BG3="#1c2430",BG4="#21262d";
+const BORDER="#3d444d",TEXT="#ffffff",TEXT2="#c9d1d9",TEXT3="#58a6ff";
+const FONT="'DM Mono','Fira Mono','Courier New',monospace";
+
+const COLS=[
+  {key:"Step 1",label:"STEP 1",color:"#1f6feb",glow:"#1f6feb33"},
+  {key:"Step 2",label:"STEP 2",color:"#8957e5",glow:"#8957e533"},
+  {key:"Step 3",label:"STEP 3",color:"#d29922",glow:"#d2992233"},
+  {key:"Step 4",label:"STEP 4",color:"#db6d28",glow:"#db6d2833"},
+  {key:"Step 5",label:"STEP 5",color:"#2ea043",glow:"#2ea04333"},
+  {key:"Completed",label:"COMPLETED",color:"#3fb950",glow:"#3fb95033"},
+  {key:"Advanced",label:"ADVANCED",color:"#58a6ff",glow:"#58a6ff33"},
+  {key:"—",label:"UNTRACKED",color:"#484f58",glow:"#484f5833"},
+];
+const COL_MAP={};
+COLS.forEach(c=>COL_MAP[c.key]=c);
+
+const ALL_MEMBERS=[
+  {id:"105409019459",name:"Clinton A Holly",step:"—",expiry:"2026-05-08",program:"Mastermind"},
+  {id:"125904093584",name:"Karam Abdalla",step:"Completed",expiry:"2026-09-12",program:"Mastermind"},
+  {id:"184327043218",name:"Ziad Abu-Lebdeh",step:"Step 5",expiry:"2027-04-30",program:"Accelerator"},
+  {id:"137596213031",name:"Leaque Ahmed",step:"Completed",expiry:"2026-11-20",program:"Accelerator"},
+  {id:"143182341139",name:"Bob Aitken",step:"—",expiry:"2026-04-22",program:"Mastermind"},
+  {id:"150347841408",name:"Benito Alvarez",step:"Completed",expiry:"2026-05-28",program:"Mastermind"},
+  {id:"53972146739",name:"Cecil Ash",step:"Step 1",expiry:"2026-11-06",program:"Mastermind"},
+  {id:"191219182109",name:"Melva Ballesteros",step:"Step 5",expiry:"2026-07-18",program:"Mastermind"},
+  {id:"213276244822",name:"Clement Banda",step:"Step 2",expiry:"2026-11-03",program:"Mastermind"},
+  {id:"31343425398",name:"Drake Bassett",step:"—",expiry:"2026-10-31",program:"Mastermind"},
+  {id:"140372065149",name:"Nikhil Bhat",step:"—",expiry:"2026-04-18",program:"Accelerator"},
+  {id:"192057432994",name:"Neil Blackburn",step:"—",expiry:"2026-10-11",program:"Mastermind"},
+  {id:"17380377496",name:"David Bogan",step:"—",expiry:"2026-08-08",program:"Mastermind"},
+  {id:"64534096248",name:"Jacob Boswell",step:"—",expiry:"2026-07-23",program:"Accelerator"},
+  {id:"6362151",name:"David Bourree",step:"—",expiry:"2026-06-11",program:"Mastermind"},
+  {id:"7156111",name:"Jennifer Brignac",step:"—",expiry:"2026-11-24",program:"Mastermind"},
+  {id:"162948658326",name:"Kevin Budge",step:"Completed",expiry:"2027-06-13",program:"Mastermind"},
+  {id:"184051006577",name:"Alex Cahoj",step:"Completed",expiry:"2026-07-15",program:"Mastermind"},
+  {id:"160918958382",name:"Jeffrey Carron",step:"Step 4",expiry:"2026-05-21",program:"Mastermind"},
+  {id:"157507859042",name:"Robert Carter",step:"Step 4",expiry:"2026-04-16",program:"Mastermind"},
+  {id:"143913179259",name:"Richard Chappell",step:"Completed",expiry:"2026-04-08",program:"Mastermind"},
+  {id:"41875405177",name:"Russell Clark",step:"—",expiry:"2026-08-20",program:"Mastermind"},
+  {id:"209115055944",name:"Clifford Coglietti",step:"—",expiry:"2026-10-19",program:"Mastermind"},
+  {id:"182444274866",name:"Terry Crosby",step:"Completed",expiry:"2027-05-30",program:"Mastermind"},
+  {id:"211388584275",name:"Lexis Crosby",step:"Step 1",expiry:"2026-10-24",program:"Mastermind"},
+  {id:"141649839160",name:"William Curton",step:"—",expiry:"2026-09-12",program:"Mastermind"},
+  {id:"7164255",name:"Ellis Dehaven",step:"—",expiry:"2026-11-05",program:"Mastermind"},
+  {id:"169739861791",name:"Linda Desautels",step:"Step 2",expiry:"2027-07-30",program:"Mastermind"},
+  {id:"7154472",name:"Alessio DiFranco",step:"—",expiry:"2026-07-14",program:"Mastermind"},
+  {id:"213979072159",name:"Tom Eaglehouse",step:"—",expiry:"2026-11-08",program:"Mastermind"},
+  {id:"44807871019",name:"Mark Erikson",step:"—",expiry:"2027-03-06",program:"Mastermind"},
+  {id:"158710810001",name:"David Ethridge",step:"Step 4",expiry:"2026-06-13",program:"Mastermind"},
+  {id:"159854041752",name:"Rebecca Even",step:"Step 2",expiry:"2026-04-30",program:"Mastermind"},
+  {id:"7153698",name:"Fred Fardone",step:"—",expiry:"2026-11-30",program:"Mastermind"},
+  {id:"171927472390",name:"Alexandre Faucher",step:"Completed",expiry:"2026-07-10",program:"Mastermind"},
+  {id:"207136108901",name:"Tracey Fines",step:"—",expiry:"2026-05-03",program:"Mastermind"},
+  {id:"184066170795",name:"Scott Freeland",step:"Completed",expiry:"2027-10-11",program:"Mastermind"},
+  {id:"210191605409",name:"Paul Friant",step:"—",expiry:"2027-04-30",program:"Mastermind"},
+  {id:"191638997640",name:"Joel Gallegos",step:"Completed",expiry:"2027-08-25",program:"Mastermind"},
+  {id:"38966304912",name:"Kendall Gentry",step:"—",expiry:"2027-03-15",program:"Mastermind"},
+  {id:"82772006250",name:"Albert Gest",step:"—",expiry:"2026-06-18",program:"Mastermind"},
+  {id:"47435195742",name:"Neil Gholson",step:"—",expiry:"2026-11-25",program:"Mastermind"},
+  {id:"153512247384",name:"Dot Glodek",step:"Completed",expiry:"2026-05-11",program:"Mastermind"},
+  {id:"7155097",name:"Jason Greeson",step:"Step 2",expiry:"2026-12-14",program:"Mastermind"},
+  {id:"192669494629",name:"Michael Griffin",step:"Step 4",expiry:"2026-07-16",program:"Mastermind"},
+  {id:"192875653990",name:"John Hansum",step:"Step 4",expiry:"2026-08-19",program:"Mastermind"},
+  {id:"145996674888",name:"Chuck Hartz",step:"Completed",expiry:"2027-04-14",program:"Mastermind"},
+  {id:"142233483020",name:"Michael Haywood",step:"Completed",expiry:"2026-04-17",program:"Accelerator"},
+  {id:"100227984209",name:"Jason Hoerler",step:"Completed",expiry:"2027-04-11",program:"Mastermind"},
+  {id:"7153801",name:"Dan Huntsbarger",step:"—",expiry:"2026-10-03",program:"Mastermind"},
+  {id:"158201196955",name:"Juan Jacome",step:"Completed",expiry:"2026-03-29",program:"Mastermind"},
+  {id:"179206143102",name:"Rita Jain",step:"—",expiry:"2027-07-31",program:"Mastermind"},
+  {id:"157280066131",name:"Paul Janssen",step:"Step 1",expiry:"2026-03-25",program:"Mastermind"},
+  {id:"7153270",name:"Keith Kammerer",step:"Completed",expiry:"2026-07-26",program:"Mastermind"},
+  {id:"210111412649",name:"Marcus Keane",step:"Step 3",expiry:"2026-06-25",program:"Mastermind"},
+  {id:"136907489416",name:"Jovan Kekich",step:"Completed",expiry:"2026-04-12",program:"Mastermind"},
+  {id:"65174933766",name:"Mike Kinzer",step:"—",expiry:"2026-06-19",program:"Accelerator"},
+  {id:"140359737985",name:"Mike Kissire",step:"—",expiry:"2026-03-31",program:"Mastermind"},
+  {id:"99072680738",name:"Sachin Kumbhar",step:"—",expiry:"2026-10-23",program:"Mastermind"},
+  {id:"7155425",name:"Garry Kupchinski",step:"—",expiry:"2026-07-20",program:"Mastermind"},
+  {id:"143473439150",name:"Patrick Lee",step:"—",expiry:"2027-05-08",program:"Mastermind"},
+  {id:"130321684011",name:"Chris Lippincott",step:"—",expiry:"2026-10-11",program:"Mastermind"},
+  {id:"103388974909",name:"Jonathan Lyon",step:"Step 4",expiry:"2026-09-09",program:"Accelerator"},
+  {id:"93759513982",name:"Tim Macmanus",step:"Step 4",expiry:"2026-07-22",program:"Mastermind"},
+  {id:"94246782344",name:"JB Macutay",step:"—",expiry:"2026-08-28",program:"Mastermind"},
+  {id:"214210274650",name:"Rob Marriott",step:"—",expiry:"2026-04-30",program:"Mastermind"},
+  {id:"7154092",name:"Roger Martens",step:"—",expiry:"2026-04-15",program:"Accelerator"},
+  {id:"212892772974",name:"Jacqui Mast",step:"Step 1",expiry:"2026-11-03",program:"Mastermind"},
+  {id:"39180116384",name:"Mila Mazancova",step:"—",expiry:"2026-02-14",program:"Mastermind"},
+  {id:"47769091946",name:"Matthew McGee",step:"—",expiry:"2026-12-09",program:"Mastermind"},
+  {id:"126861542547",name:"Mikel McGrath",step:"—",expiry:"2026-10-30",program:"Mastermind"},
+  {id:"83472328198",name:"Rudolph Medina",step:"—",expiry:"2026-03-26",program:"Mastermind"},
+  {id:"5423113655",name:"Paige Melancon",step:"—",expiry:"2027-01-18",program:"Mastermind"},
+  {id:"181789788964",name:"Marvin Minney",step:"Step 1",expiry:"2026-07-10",program:"Mastermind"},
+  {id:"116730821521",name:"Thomas Mohajeri",step:"Completed",expiry:"2026-03-30",program:"Mastermind"},
+  {id:"107225931916",name:"Armita Moody",step:"Step 1",expiry:"2026-10-25",program:"Mastermind"},
+  {id:"155646438769",name:"Martin Navarro",step:"—",expiry:"2027-03-20",program:"Mastermind"},
+  {id:"72185779308",name:"Mark Neighbor",step:"—",expiry:"2026-04-16",program:"Mastermind"},
+  {id:"5461351",name:"Mike Neith",step:"Step 1",expiry:"2026-09-12",program:"Mastermind"},
+  {id:"155107159461",name:"Tanya Nguyen",step:"—",expiry:"2027-01-07",program:"Accelerator"},
+  {id:"94055948362",name:"Oswaldo Nicastro",step:"—",expiry:"2026-08-25",program:"Mastermind"},
+  {id:"7257761",name:"Wallace Nichols",step:"—",expiry:"2026-03-30",program:"Mastermind"},
+  {id:"90051247472",name:"Stephen Pack",step:"—",expiry:"2026-11-17",program:"Mastermind"},
+  {id:"191363813001",name:"Daniel Pence",step:"Step 5",expiry:"2027-03-18",program:"Mastermind"},
+  {id:"184703447160",name:"Tony Pickett",step:"Step 2",expiry:"2026-06-13",program:"Mastermind"},
+  {id:"163023545462",name:"David Pierce",step:"—",expiry:"2026-04-14",program:"Mastermind"},
+  {id:"193407447360",name:"Gary Price",step:"Completed",expiry:"2026-07-17",program:"Mastermind"},
+  {id:"206784769848",name:"Sumit Rajpal",step:"Completed",expiry:"2026-07-19",program:"Mastermind"},
+  {id:"141473218918",name:"Cedric Ray",step:"—",expiry:"2026-02-27",program:"Mastermind"},
+  {id:"153970213014",name:"Sean Remz",step:"—",expiry:"2026-03-09",program:"Mastermind"},
+  {id:"138354279798",name:"Barbara Richardson",step:"Step 1",expiry:"2027-06-16",program:"Mastermind"},
+  {id:"82959306635",name:"Brian Richter",step:"Completed",expiry:"2026-08-10",program:"Mastermind"},
+  {id:"7153362",name:"C Scott Riley",step:"—",expiry:"2026-06-19",program:"Mastermind"},
+  {id:"208787451309",name:"Kathryn Rizzo",step:"—",expiry:"2026-10-30",program:"Mastermind"},
+  {id:"156462840124",name:"Bruce Robles",step:"—",expiry:"2026-06-13",program:"Mastermind"},
+  {id:"181725207960",name:"Marc Roehl",step:"—",expiry:"2027-02-19",program:"Accelerator"},
+  {id:"52437385285",name:"Curtis Rush",step:"—",expiry:"2026-04-25",program:"Mastermind"},
+  {id:"53576921182",name:"Roy Sakamoto",step:"—",expiry:"2027-02-15",program:"Mastermind"},
+  {id:"172472162143",name:"Davide Santangelo",step:"Completed",expiry:"2026-10-27",program:"Mastermind"},
+  {id:"195272243988",name:"Harry Scanlan",step:"—",expiry:"2026-09-15",program:"Mastermind"},
+  {id:"180533319477",name:"Keving Seaman",step:"—",expiry:"2026-10-28",program:"Mastermind"},
+  {id:"146255537326",name:"Pete Shah",step:"—",expiry:"2026-02-20",program:"Mastermind"},
+  {id:"138025480841",name:"Keyur Shah",step:"Step 3",expiry:"2027-03-21",program:"Mastermind"},
+  {id:"36651924050",name:"Stephen Shelton",step:"—",expiry:"2027-02-18",program:"Mastermind"},
+  {id:"55688157736",name:"Ani Sierra",step:"—",expiry:"2026-04-11",program:"Mastermind"},
+  {id:"158268753016",name:"John Spillar",step:"—",expiry:"2027-05-31",program:"Mastermind"},
+  {id:"179174823528",name:"Daniel Stack",step:"Completed",expiry:"2026-04-09",program:"Mastermind"},
+  {id:"166618340439",name:"Dr. Jeffrey Stannard",step:"Completed",expiry:"2026-04-25",program:"Mastermind"},
+  {id:"104329679645",name:"Jason Steeves",step:"—",expiry:"2026-09-12",program:"Mastermind"},
+  {id:"167457564338",name:"Jared Storoshenko",step:"Completed",expiry:"2026-09-12",program:"Mastermind"},
+  {id:"189364723294",name:"Danny Tallent",step:"—",expiry:"2026-10-26",program:"Mastermind"},
+  {id:"210111128433",name:"Larry Tanner",step:"Completed",expiry:"2026-05-20",program:"Mastermind"},
+  {id:"175190511118",name:"Tim Tompkins",step:"—",expiry:"2026-06-01",program:"Mastermind"},
+  {id:"211388330404",name:"Nirav Trivedi",step:"—",expiry:"2026-10-23",program:"Mastermind"},
+  {id:"79744102768",name:"Aneel Ursani",step:"—",expiry:"2027-01-21",program:"Mastermind"},
+  {id:"108725869982",name:"Zhiyuan Wang",step:"Step 2",expiry:"2026-03-23",program:"Mastermind"},
+  {id:"212806404943",name:"Joseph Wang",step:"Step 3",expiry:"2026-07-27",program:"Mastermind"},
+  {id:"91282556774",name:"Alan Webb",step:"—",expiry:"2026-09-15",program:"Mastermind"},
+  {id:"212572487223",name:"Mike Weiland",step:"Step 3",expiry:"2026-04-02",program:"Mastermind"},
+  {id:"7168576",name:"Michael Wertz",step:"Step 3",expiry:"2026-03-13",program:"Mastermind"},
+  {id:"1179401",name:"Ron Westberg",step:"—",expiry:"2026-07-14",program:"Accelerator"},
+  {id:"207889730717",name:"Ron Woodford",step:"—",expiry:"2026-10-28",program:"Mastermind"},
+  {id:"211611835754",name:"Brad Woodford",step:"—",expiry:"2026-10-28",program:"Mastermind"},
+];
+
+const TODAY=new Date();
+function daysAgo(ds){if(!ds)return 999;return Math.floor((TODAY-new Date(ds))/86400000);}
+function daysUntil(ds){return Math.ceil((new Date(ds)-TODAY)/86400000);}
+function urgency(m,data){
+  const d=data[m.id]||{};
+  const r=daysUntil(m.expiry);
+  if(r<0)return"expired";
+  if(d.lastContact){const lc=daysAgo(d.lastContact);if(lc>=14)return"red";if(lc>=7)return"amber";}
+  if(r<=30)return"amber";
+  return"green";
+}
+const URG={expired:{color:"#f85149"},red:{color:"#f85149"},amber:{color:"#d29922"},green:{color:"#3fb950"}};
+function ini(n){return n.split(" ").slice(0,2).map(x=>x[0]).join("").toUpperCase();}
+
+const STORAGE_KEY="mjt_data_v3";
+function lsGet(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+
+const SEED_DATA={
+  "184066170795":{
+    lastContact:"2026-04-13",
+    lastCall:`APRIL 13 UPDATE: Scott confirmed 0.5 BTC successfully transferred to AAVE as wBTC collateral. Asking for updated plan + redeployment plan for borrowed USDT.\n\nAPRIL 7 CALL — MAJOR STRATEGY PIVOT: BTC sale is OFF. Replaced with AAVE lending/borrowing. Flow: wrap 0.5 BTC → wBTC → deposit on AAVE Ethereum core market → borrow USDT at 30% LTV (~$10K at 3.25% APY) → deploy into LPs when targets identified.\n\nPREVIOUS: Mar 13 — portfolio review. Mar 18 — 50/50 BTC plan, THORChain walkthrough. Mar 27 — migrated Aerodrome, built vfat shortlist, opened first pool. Apr 4 — BTC sale urgency shift, XAUT over PAXG, Drift hack ($2K frozen), EURC/USDC pool.`,
+    planSnapshot:{
+      goals:"Aggressive-growth portfolio 3-5 years. Target: BTC 35% / Blue Chips 30% / High Risk 20% / Stables 10% / Gold 5%. Yield via LPs. Stock cashflow into crypto via covered calls (pending DM stock program). Tyler copy trading $15K. Bot $10K.",
+      activeFocus:"AAVE lending — 0.5 BTC deposited as wBTC collateral, borrow ~$10K USDT at 30% LTV. Deploy borrowed USDT into LP positions. Continue vfat positions on ETH/Base. EURC/USDC pool active. Kamino/Orca/Raydium on Solana next.",
+      onHold:"BTC sale — replaced by AAVE lending. Stock/options plan — redirected to DM stock program. Gems/speculative plays — paused. Drift — hacked, $2K frozen. Stablecoin yield — Scott's decision.",
+      completed:"Plan built Mar 26. vfat training done — first pool opened. Aerodrome migrated. EURC/USDC pool deployed. Bot started ($5). 0.5 BTC transferred to AAVE (Apr 13). Stock/options plan closed."
+    },
+    guardrails:[
+      "NO BTC sale — strategy is AAVE lending/borrowing. BTC stays cold.",
+      "NO Drift — hacked $270M, Juan has $2K frozen there.",
+      "LPs: vfat.io and Beefy only for ETH/Base. No random pools.",
+      "NO stock/options plan from Juan — redirected to DM stock program.",
+      "NO gems/speculative plays — paused.",
+      "Gold: XAUT only (not PAXG). Buy via Uniswap.",
+      "BTC purchases: THORChain or CEX only — not natively on HyperLiquid.",
+      "AAVE LTV: borrow at 30% MAX.",
+    ],
+    privateNotes:`Very driven, detail-oriented, great attitude. Was reassigned to another mentor, didn't like him, requested to come back to Juan. Wants thorough follow-through. Always send call recordings same day. Tends to build his own action plans from call recordings.`,
+    homework:[
+      {text:"Build USDT redeployment plan — LP targets, position sizes, entry sequencing for ~$10K borrowed",done:false},
+      {text:"Update plan doc: replace BTC sale → AAVE lending, PAXG → XAUT, remove Drift, add EURC/USDC",done:false},
+      {text:"Connect Scott with Abe for IRA questions (iTrustCapital $16K, $7K contribution timing)",done:false},
+      {text:"Check: did Scott rotate wETH/CBBTC to the 212% pool?",done:false},
+      {text:"Check: did Scott bridge anything to Base via KyberSwap?",done:false},
+      {text:"Nudge Scott for cost basis info — overdue since March 13",done:false},
+      {text:"Confirm Scott set up portfolio tracking: Zerion + spreadsheet + CoinTracker",done:false},
+    ],
+    followUp:""
+  }
+};
+
+function Detail({member,data,onSave,onClose}){
+  const d=data[member.id]||{};
+  const [tab,setTab]=useState("brief");
+  const [hw,setHw]=useState(d.homework||[]);
+  const [newT,setNewT]=useState("");
+  const [lastCall,setLastCall]=useState(d.lastCall||"");
+  const [lastContact,setLastContact]=useState(d.lastContact||"");
+  const [followUp,setFollowUp]=useState(d.followUp||"");
+  const [transcript,setTranscript]=useState("");
+  const [generating,setGenerating]=useState(false);
+  const [briefing,setBriefing]=useState(null);
+  const [copied,setCopied]=useState(false);
+  const [briefCopied,setBriefCopied]=useState(false);
+  const [guardrails,setGuardrails]=useState(d.guardrails||[]);
+  const [newGuardrail,setNewGuardrail]=useState("");
+  const [planSnapshot,setPlanSnapshot]=useState(d.planSnapshot||{goals:"",activeFocus:"",onHold:"",completed:""});
+  const [privateNotes,setPrivateNotes]=useState(d.privateNotes||"");
+  const [callBrief,setCallBrief]=useState(null);
+  const [generatingBrief,setGeneratingBrief]=useState(false);
+
+  function save(){onSave(member.id,{homework:hw,lastCall,lastContact,followUp,guardrails,planSnapshot,privateNotes});}
+  function addT(){if(!newT.trim())return;setHw(h=>[...h,{text:newT.trim(),done:false}]);setNewT("");}
+  function toggleT(i){setHw(h=>h.map((t,x)=>x===i?{...t,done:!t.done}:t));}
+  function removeT(i){setHw(h=>h.filter((_,x)=>x!==i));}
+  function addGuardrail(){if(!newGuardrail.trim())return;setGuardrails(g=>[...g,newGuardrail.trim()]);setNewGuardrail("");}
+  function removeGuardrail(i){setGuardrails(g=>g.filter((_,x)=>x!==i));}
+
+  async function generateCallBrief(){
+    setGeneratingBrief(true);setCallBrief(null);
+    const openHw=hw.filter(t=>!t.done).map(t=>t.text);
+    const doneHw=hw.filter(t=>t.done).map(t=>t.text);
+    const renewal=daysUntil(member.expiry);
+    try{
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:800,messages:[{role:"user",content:`You are a DeFi mentor assistant helping Juan Villar prepare for a call with ${member.name}.\n\nMEMBER DATA:\n- Program: ${member.program} | Step: ${member.step}\n- Membership renews in: ${renewal>0?renewal+' days':'EXPIRED'}\n- Last contact: ${lastContact||'not logged'}\n- Last call notes: ${lastCall||'none'}\n- Open homework: ${openHw.length?openHw.join('; '):'none'}\n- Completed homework: ${doneHw.length?doneHw.join('; '):'none'}\n\nPLAN SNAPSHOT:\n- Goals: ${planSnapshot.goals||'not set'}\n- Active focus: ${planSnapshot.activeFocus||'not set'}\n- On hold: ${planSnapshot.onHold||'not set'}\n- Completed milestones: ${planSnapshot.completed||'not set'}\n\nGUARDRAILS:\n${guardrails.length?guardrails.map((g,i)=>`${i+1}. ${g}`).join('\n'):'none'}\n\nReturn JSON only:\n{"whereWeAt":"2-3 sentences","focusToday":["item"],"openItems":["item"],"guardrailAlert":["alert"],"renewalNote":"string or null","talkingPoints":["point"]}`}]})});
+      const dt=await res.json();
+      const txt=dt.content?.find(b=>b.type==="text")?.text||"{}";
+      setCallBrief(JSON.parse(txt.replace(/```json|```/g,"").trim()));
+    }catch(e){setCallBrief({whereWeAt:"Error generating brief."});}
+    setGeneratingBrief(false);
+  }
+
+  async function processTranscript(){
+    if(!transcript.trim())return;
+    setGenerating(true);
+    try{
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:`DeFi mentor assistant. Analyze this call transcript for ${member.name}, currently in ${member.step} of DA 5.0.\n\nTranscript:\n${transcript}\n\nReturn JSON only:\n{"summary":"3-4 sentence call summary","homework":["action item 1","action item 2"],"mentorActions":["what mentor needs to do"],"followUp":"Short warm SMS under 80 words","flag":"urgent concern or null"}`}]})});
+      const dt=await res.json();
+      const txt=dt.content?.find(b=>b.type==="text")?.text||"{}";
+      const p=JSON.parse(txt.replace(/```json|```/g,"").trim());
+      setBriefing(p);
+      if(p.summary)setLastCall(p.summary);
+      if(p.homework?.length)setHw(h=>[...h,...p.homework.map(t=>({text:t,done:false}))]);
+      if(p.followUp)setFollowUp(p.followUp);
+      setTab("journey");
+    }catch(e){setBriefing({summary:"Error processing."});}
+    setGenerating(false);
+  }
+
+  async function genFollowUp(){
+    setGenerating(true);
+    const open=hw.filter(t=>!t.done).map(t=>t.text);
+    try{
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:250,messages:[{role:"user",content:`Write a short warm check-in from Juan (DeFi mentor at Decentralized Masters) to ${member.name.split(" ")[0]}.\nProgram: ${member.step}. Last call: ${lastCall||"not logged"}.\nOpen homework: ${open.length?open.join(", "):"none logged"}.\nUnder 80 words. Conversational. One clear nudge at the end. Return message only.`}]})});
+      const dt=await res.json();
+      setFollowUp(dt.content?.find(b=>b.type==="text")?.text||"");
+    }catch(e){}
+    setGenerating(false);
+  }
+
+  const col=COL_MAP[member.step]||COL_MAP["—"];
+  const renewal=daysUntil(member.expiry);
+  const openCount=hw.filter(t=>!t.done).length;
+
+  const tabs=[
+    ["brief","⚡ CALL BRIEF"],
+    ["journey","JOURNEY"],
+    ["homework",`HOMEWORK${openCount>0?` (${openCount})`:""}`],
+    ["guardrails",`GUARDRAILS${guardrails.length>0?` (${guardrails.length})`:""}`],
+    ["followup","FOLLOW-UP"],
+    ["transcript","TRANSCRIPT"],
+    ["private","🔒 PRIVATE"],
+  ];
+
+  const inp={fontSize:14,borderRadius:6,border:`1px solid ${BORDER}`,padding:"10px 12px",background:BG4,color:TEXT,width:"100%",boxSizing:"border-box",fontFamily:FONT,resize:"vertical",outline:"none"};
+
+  function briefText(){
+    if(!callBrief)return"";
+    let t=`PRE-CALL BRIEF — ${member.name}\n${"─".repeat(40)}\n\n`;
+    if(callBrief.whereWeAt)t+=`WHERE WE'RE AT\n${callBrief.whereWeAt}\n\n`;
+    if(callBrief.guardrailAlert?.length)t+=`GUARDRAILS — HARD NOs\n${callBrief.guardrailAlert.map(g=>`• ${g}`).join("\n")}\n\n`;
+    if(callBrief.focusToday?.length)t+=`TODAY'S FOCUS\n${callBrief.focusToday.map(f=>`• ${f}`).join("\n")}\n\n`;
+    if(callBrief.openItems?.length)t+=`OPEN ITEMS\n${callBrief.openItems.map(o=>`• ${o}`).join("\n")}\n\n`;
+    if(callBrief.talkingPoints?.length)t+=`TALKING POINTS\n${callBrief.talkingPoints.map(p=>`• ${p}`).join("\n")}\n\n`;
+    if(callBrief.renewalNote)t+=`RENEWAL\n${callBrief.renewalNote}`;
+    return t.trim();
+  }
+
+  return React.createElement("div",{
+    style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:16},
+    onClick:e=>{if(e.target===e.currentTarget){save();onClose();}}
+  },
+    React.createElement("div",{style:{background:BG2,border:`1px solid ${col.color}`,borderRadius:12,width:"100%",maxWidth:640,maxHeight:"90vh",overflow:"hidden",display:"flex",flexDirection:"column",boxShadow:`0 0 40px ${col.glow}`}},
+      React.createElement("div",{style:{padding:"16px 20px",borderBottom:`1px solid ${BORDER}`,display:"flex",justifyContent:"space-between",alignItems:"center",background:BG3,flexShrink:0}},
+        React.createElement("div",{style:{display:"flex",gap:12,alignItems:"center"}},
+          React.createElement("div",{style:{width:42,height:42,borderRadius:"50%",background:col.glow,border:`2px solid ${col.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:col.color,flexShrink:0}},ini(member.name)),
+          React.createElement("div",null,
+            React.createElement("p",{style:{margin:0,fontWeight:700,fontSize:17,color:TEXT}},member.name),
+            React.createElement("p",{style:{margin:0,fontSize:13,color:TEXT2}},`${member.program} · ${renewal>0?`Renews in ${renewal}d`:"EXPIRED"}`)
+          )
+        ),
+        React.createElement("div",{style:{display:"flex",gap:8,alignItems:"center"}},
+          React.createElement("span",{style:{background:col.glow,color:col.color,border:`1px solid ${col.color}`,borderRadius:20,fontSize:12,padding:"4px 12px",fontWeight:700,letterSpacing:1}},member.step),
+          React.createElement("a",{href:`https://app.hubspot.com/contacts/44781526/record/0-1/${member.id}`,target:"_blank",rel:"noreferrer",style:{fontSize:12,color:TEXT3,textDecoration:"none",padding:"4px 10px",border:`1px solid ${BORDER}`,borderRadius:6}},"HubSpot ↗"),
+          React.createElement("button",{onClick:()=>{save();onClose();},style:{background:"none",border:"none",cursor:"pointer",fontSize:18,color:TEXT2,padding:"0 4px"}},"✕")
+        )
+      ),
+      (renewal<=30||briefing?.flag)&&React.createElement("div",{style:{padding:"8px 20px",background:renewal<=0?"#3d1a1a":renewal<=30?"#2d2008":"transparent",borderBottom:`1px solid ${BORDER}`,flexShrink:0}},
+        renewal<=0&&React.createElement("p",{style:{margin:0,fontSize:13,color:"#f85149",fontWeight:600}},"⚠ Membership expired — renewal conversation needed immediately"),
+        renewal>0&&renewal<=30&&React.createElement("p",{style:{margin:0,fontSize:13,color:"#d29922",fontWeight:600}},`⚡ Renewing in ${renewal} days — start the renewal conversation`),
+        briefing?.flag&&React.createElement("p",{style:{margin:0,fontSize:13,color:"#f85149",marginTop:4}},`⚠ ${briefing.flag}`)
+      ),
+      guardrails.length>0&&React.createElement("div",{style:{padding:"6px 20px",background:"#1a1200",borderBottom:"1px solid #d29922",flexShrink:0,display:"flex",alignItems:"center",gap:8}},
+        React.createElement("span",{style:{fontSize:13}},"🚫"),
+        React.createElement("span",{style:{fontSize:12,color:"#d29922",fontWeight:700}},`${guardrails.length} GUARDRAIL${guardrails.length>1?"S":""} ACTIVE`),
+        React.createElement("span",{style:{fontSize:12,color:TEXT2,marginLeft:4}},`${guardrails[0]}${guardrails.length>1?` (+${guardrails.length-1} more)`:""}`)
+      ),
+      React.createElement("div",{style:{display:"flex",borderBottom:`1px solid ${BORDER}`,background:BG3,flexShrink:0,overflowX:"auto"}},
+        tabs.map(([k,l])=>React.createElement("button",{key:k,onClick:()=>setTab(k),style:{flexShrink:0,padding:"11px 12px",border:"none",borderBottom:tab===k?`2px solid ${k==="brief"?"#f85149":col.color}`:"2px solid transparent",background:"none",cursor:"pointer",fontSize:11,fontWeight:700,letterSpacing:0.6,color:tab===k?(k==="brief"?"#f85149":col.color):TEXT2,whiteSpace:"nowrap",fontFamily:FONT}},l))
+      ),
+      React.createElement("div",{style:{flex:1,overflowY:"auto",padding:"18px 20px",background:BG2}},
+        tab==="brief"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:16}},
+          React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}},
+            React.createElement("p",{style:{margin:0,fontSize:13,color:TEXT2}},"30-second pre-call brief — status, open items, guardrails, talking points."),
+            React.createElement("button",{onClick:generateCallBrief,disabled:generatingBrief,style:{flexShrink:0,padding:"10px 18px",borderRadius:8,border:"1px solid #f85149",cursor:"pointer",fontSize:12,fontWeight:700,background:"transparent",color:"#f85149",fontFamily:FONT}},generatingBrief?"GENERATING...":"⚡ GENERATE BRIEF")
+          ),
+          callBrief&&!generatingBrief&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:12}},
+            callBrief.whereWeAt&&React.createElement("div",{style:{background:BG3,borderRadius:8,padding:"14px 16px",border:`1px solid ${BORDER}`}},
+              React.createElement("p",{style:{margin:"0 0 8px",fontSize:11,fontWeight:700,color:TEXT2,letterSpacing:1}},"WHERE WE'RE AT"),
+              React.createElement("p",{style:{margin:0,fontSize:14,color:TEXT,lineHeight:1.6}},callBrief.whereWeAt)
+            ),
+            callBrief.guardrailAlert?.length>0&&React.createElement("div",{style:{background:"#1a1200",borderRadius:8,padding:"14px 16px",border:"2px solid #d29922"}},
+              React.createElement("p",{style:{margin:"0 0 10px",fontSize:11,fontWeight:700,color:"#d29922",letterSpacing:1}},"🚫 GUARDRAILS — HARD NOs"),
+              callBrief.guardrailAlert.map((g,i)=>React.createElement("div",{key:i,style:{display:"flex",gap:8,marginBottom:6}},
+                React.createElement("span",{style:{color:"#d29922"}},"⛔"),
+                React.createElement("span",{style:{fontSize:14,color:"#e6c55a"}},g)
+              ))
+            ),
+            React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}},
+              callBrief.focusToday?.length>0&&React.createElement("div",{style:{background:BG3,borderRadius:8,padding:"14px 16px",border:`1px solid ${col.color}55`}},
+                React.createElement("p",{style:{margin:"0 0 10px",fontSize:11,fontWeight:700,color:col.color,letterSpacing:1}},"TODAY'S FOCUS"),
+                callBrief.focusToday.map((f,i)=>React.createElement("div",{key:i,style:{display:"flex",gap:6,marginBottom:6}},
+                  React.createElement("span",{style:{color:col.color}},"→"),
+                  React.createElement("span",{style:{fontSize:13,color:TEXT}},f)
+                ))
+              ),
+              callBrief.openItems?.length>0&&React.createElement("div",{style:{background:BG3,borderRadius:8,padding:"14px 16px",border:`1px solid ${BORDER}`}},
+                React.createElement("p",{style:{margin:"0 0 10px",fontSize:11,fontWeight:700,color:TEXT2,letterSpacing:1}},"OPEN ITEMS"),
+                callBrief.openItems.map((o,i)=>React.createElement("div",{key:i,style:{display:"flex",gap:6,marginBottom:6}},
+                  React.createElement("span",{style:{color:"#d29922"}},"•"),
+                  React.createElement("span",{style:{fontSize:13,color:TEXT}},o)
+                ))
+              )
+            ),
+            callBrief.talkingPoints?.length>0&&React.createElement("div",{style:{background:BG3,borderRadius:8,padding:"14px 16px",border:`1px solid ${BORDER}`}},
+              React.createElement("p",{style:{margin:"0 0 10px",fontSize:11,fontWeight:700,color:TEXT2,letterSpacing:1}},"TALKING POINTS"),
+              callBrief.talkingPoints.map((p,i)=>React.createElement("div",{key:i,style:{display:"flex",gap:8,marginBottom:8}},
+                React.createElement("span",{style:{background:col.glow,color:col.color,borderRadius:4,fontSize:11,padding:"1px 6px",fontWeight:700,flexShrink:0}},i+1),
+                React.createElement("span",{style:{fontSize:13,color:TEXT,lineHeight:1.5}},p)
+              ))
+            ),
+            callBrief.renewalNote&&React.createElement("div",{style:{background:"#2d2008",borderRadius:8,padding:"12px 16px",border:"1px solid #d29922"}},
+              React.createElement("p",{style:{margin:0,fontSize:13,color:"#d29922",fontWeight:600}},`⚡ ${callBrief.renewalNote}`)
+            ),
+            React.createElement("button",{onClick:()=>{navigator.clipboard.writeText(briefText());setBriefCopied(true);setTimeout(()=>setBriefCopied(false),2000);},style:{alignSelf:"flex-start",padding:"8px 16px",borderRadius:8,border:`1px solid ${BORDER}`,cursor:"pointer",fontSize:13,fontWeight:700,background:BG4,color:briefCopied?"#3fb950":TEXT,fontFamily:FONT}},briefCopied?"COPIED ✓":"COPY BRIEF")
+          ),
+          !callBrief&&!generatingBrief&&React.createElement("div",{style:{textAlign:"center",padding:"32px 0"}},
+            React.createElement("p",{style:{fontSize:32,margin:"0 0 12px"}},"⚡"),
+            React.createElement("p",{style:{fontSize:14,color:TEXT2,margin:0}},`Hit Generate Brief before your next call with ${member.name.split(" ")[0]}`)
+          )
+        ),
+        tab==="journey"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:16}},
+          React.createElement("div",{style:{background:BG3,borderRadius:8,padding:"14px 16px",border:`1px solid ${BORDER}`}},
+            React.createElement("p",{style:{margin:"0 0 12px",fontSize:12,fontWeight:700,color:TEXT2,letterSpacing:1}},"PLAN SNAPSHOT"),
+            [["goals","🎯 Goals"],["activeFocus","🔥 Active Focus"],["onHold","🚫 On Hold / NOT Doing"],["completed","✅ Completed Milestones"]].map(([key,label])=>
+              React.createElement("div",{key,style:{marginBottom:10}},
+                React.createElement("p",{style:{margin:"0 0 4px",fontSize:11,color:TEXT2,fontWeight:700}},label),
+                React.createElement("textarea",{value:planSnapshot[key],onChange:e=>setPlanSnapshot(ps=>({...ps,[key]:e.target.value})),placeholder:`Add ${label.toLowerCase()}...`,rows:2,style:{...inp,fontSize:13}})
+              )
+            )
+          ),
+          React.createElement("div",null,
+            React.createElement("p",{style:{margin:"0 0 8px",fontSize:12,fontWeight:700,color:TEXT2,letterSpacing:1}},"LAST CALL / INTERACTION"),
+            React.createElement("textarea",{value:lastCall,onChange:e=>setLastCall(e.target.value),placeholder:"Type notes manually...",rows:4,style:inp})
+          ),
+          React.createElement("div",null,
+            React.createElement("p",{style:{margin:"0 0 8px",fontSize:12,fontWeight:700,color:TEXT2,letterSpacing:1}},"LAST CONTACT DATE"),
+            React.createElement("input",{type:"date",value:lastContact,onChange:e=>setLastContact(e.target.value),style:{...inp,width:"auto"}})
+          ),
+          React.createElement("button",{onClick:save,style:{alignSelf:"flex-start",padding:"9px 20px",borderRadius:8,border:`1px solid ${col.color}`,cursor:"pointer",fontSize:13,fontWeight:700,background:"transparent",color:col.color,fontFamily:FONT}},"SAVE NOTES")
+        ),
+        tab==="homework"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:12}},
+          React.createElement("p",{style:{margin:0,fontSize:14,color:TEXT2}},`Track homework for ${member.name.split(" ")[0]}.`),
+          React.createElement("div",{style:{display:"flex",gap:8}},
+            React.createElement("input",{value:newT,onChange:e=>setNewT(e.target.value),onKeyDown:e=>e.key==="Enter"&&addT(),placeholder:"Add homework item and press Enter...",style:{...inp,minHeight:"auto",resize:"none"}}),
+            React.createElement("button",{onClick:addT,style:{padding:"10px 16px",borderRadius:6,border:`1px solid ${col.color}`,cursor:"pointer",fontSize:13,fontWeight:700,background:"transparent",color:col.color,whiteSpace:"nowrap",fontFamily:FONT}},"ADD")
+          ),
+          hw.length===0&&React.createElement("p",{style:{fontSize:14,color:TEXT2,margin:0}},"No homework yet."),
+          hw.map((t,i)=>React.createElement("div",{key:i,style:{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",background:t.done?BG4:BG3,borderRadius:8,border:`1px solid ${t.done?BORDER:col.color+"66"}`}},
+            React.createElement("input",{type:"checkbox",checked:t.done,onChange:()=>toggleT(i),style:{width:18,height:18,cursor:"pointer",accentColor:col.color,flexShrink:0}}),
+            React.createElement("span",{style:{flex:1,fontSize:14,color:TEXT,textDecoration:t.done?"line-through":"none",opacity:t.done?0.4:1}},t.text),
+            React.createElement("button",{onClick:()=>removeT(i),style:{background:"none",border:"none",cursor:"pointer",color:TEXT2,fontSize:16,padding:0}},"✕")
+          )),
+          hw.length>0&&React.createElement("button",{onClick:save,style:{alignSelf:"flex-start",padding:"9px 20px",borderRadius:8,border:`1px solid ${col.color}`,cursor:"pointer",fontSize:13,fontWeight:700,background:"transparent",color:col.color,fontFamily:FONT}},"SAVE")
+        ),
+        tab==="guardrails"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:14}},
+          React.createElement("div",{style:{background:"#1a1200",borderRadius:8,padding:"12px 16px",border:"1px solid #d29922"}},
+            React.createElement("p",{style:{margin:"0 0 4px",fontSize:13,fontWeight:700,color:"#d29922"}},"🚫 What are Guardrails?"),
+            React.createElement("p",{style:{margin:0,fontSize:13,color:TEXT,lineHeight:1.6}},"Hard rules — things they should NOT do yet. Show up on every Call Brief so you never forget them mid-call.")
+          ),
+          React.createElement("div",{style:{display:"flex",gap:8}},
+            React.createElement("input",{value:newGuardrail,onChange:e=>setNewGuardrail(e.target.value),onKeyDown:e=>e.key==="Enter"&&addGuardrail(),placeholder:'e.g. "No liquidity pools outside vfat.io yet"',style:{...inp,minHeight:"auto",resize:"none",borderColor:"#d2992266"}}),
+            React.createElement("button",{onClick:addGuardrail,style:{padding:"10px 16px",borderRadius:6,border:"1px solid #d29922",cursor:"pointer",fontSize:13,fontWeight:700,background:"transparent",color:"#d29922",whiteSpace:"nowrap",fontFamily:FONT}},"ADD")
+          ),
+          guardrails.length===0&&React.createElement("p",{style:{fontSize:14,color:TEXT2,margin:0}},"No guardrails yet."),
+          guardrails.map((g,i)=>React.createElement("div",{key:i,style:{display:"flex",alignItems:"flex-start",gap:10,padding:"12px 14px",background:"#1a1200",borderRadius:8,border:"1px solid #d2992266"}},
+            React.createElement("span",{style:{fontSize:16,flexShrink:0,marginTop:1}},"🚫"),
+            React.createElement("span",{style:{flex:1,fontSize:14,color:"#e6c55a",lineHeight:1.5}},g),
+            React.createElement("button",{onClick:()=>removeGuardrail(i),style:{background:"none",border:"none",cursor:"pointer",color:TEXT2,fontSize:16,padding:0,flexShrink:0}},"✕")
+          )),
+          guardrails.length>0&&React.createElement("button",{onClick:save,style:{alignSelf:"flex-start",padding:"9px 20px",borderRadius:8,border:"1px solid #d29922",cursor:"pointer",fontSize:13,fontWeight:700,background:"transparent",color:"#d29922",fontFamily:FONT}},"SAVE GUARDRAILS")
+        ),
+        tab==="followup"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:14}},
+          React.createElement("p",{style:{margin:0,fontSize:14,color:TEXT2}},"Claude drafts a follow-up based on open homework and last interaction."),
+          React.createElement("button",{onClick:genFollowUp,disabled:generating,style:{alignSelf:"flex-start",padding:"9px 20px",borderRadius:8,border:`1px solid ${col.color}`,cursor:"pointer",fontSize:13,fontWeight:700,background:"transparent",color:col.color,fontFamily:FONT}},generating?"GENERATING...":"GENERATE FOLLOW-UP ↗"),
+          followUp&&React.createElement(React.Fragment,null,
+            React.createElement("textarea",{value:followUp,onChange:e=>setFollowUp(e.target.value),rows:6,style:inp}),
+            React.createElement("div",{style:{display:"flex",gap:8}},
+              React.createElement("button",{onClick:()=>{navigator.clipboard.writeText(followUp);setCopied(true);setTimeout(()=>setCopied(false),2000);},style:{padding:"8px 16px",borderRadius:8,border:`1px solid ${BORDER}`,cursor:"pointer",fontSize:13,fontWeight:700,background:BG4,color:copied?"#3fb950":TEXT,fontFamily:FONT}},copied?"COPIED ✓":"COPY MESSAGE"),
+              React.createElement("button",{onClick:save,style:{padding:"8px 16px",borderRadius:8,border:`1px solid ${BORDER}`,cursor:"pointer",fontSize:13,fontWeight:700,background:BG4,color:TEXT,fontFamily:FONT}},"SAVE DRAFT")
+            )
+          )
+        ),
+        tab==="transcript"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:14}},
+          React.createElement("p",{style:{margin:0,fontSize:14,color:TEXT2}},"Paste Avoma or Zoom transcript. Claude auto-fills summary, homework, and a follow-up."),
+          React.createElement("textarea",{value:transcript,onChange:e=>setTranscript(e.target.value),placeholder:"Paste full transcript here...",rows:10,style:inp}),
+          transcript&&React.createElement("button",{onClick:processTranscript,disabled:generating,style:{alignSelf:"flex-start",padding:"9px 20px",borderRadius:8,border:`1px solid ${col.color}`,cursor:"pointer",fontSize:13,fontWeight:700,background:"transparent",color:col.color,fontFamily:FONT}},generating?"PROCESSING...":"PROCESS TRANSCRIPT ↗")
+        ),
+        tab==="private"&&React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:14}},
+          React.createElement("div",{style:{background:"#1a1200",borderRadius:8,padding:"12px 16px",border:"1px solid #d2992266"}},
+            React.createElement("p",{style:{margin:"0 0 4px",fontSize:13,fontWeight:700,color:"#d29922"}},"🔒 Private Notes"),
+            React.createElement("p",{style:{margin:0,fontSize:13,color:TEXT,lineHeight:1.6}},"Your personal observations. Never shown in call briefs or follow-ups.")
+          ),
+          React.createElement("textarea",{value:privateNotes,onChange:e=>setPrivateNotes(e.target.value),placeholder:"Personality, how to handle them, things to remember...",rows:12,style:inp}),
+          React.createElement("button",{onClick:save,style:{alignSelf:"flex-start",padding:"9px 20px",borderRadius:8,border:"1px solid #d29922",cursor:"pointer",fontSize:13,fontWeight:700,background:"transparent",color:"#d29922",fontFamily:FONT}},"SAVE PRIVATE NOTES")
+        )
+      )
+    )
+  );
+}
+
+function Card({member,data,onClick}){
+  const d=data[member.id]||{};
+  const lc=d.lastContact?daysAgo(d.lastContact):null;
+  const open=(d.homework||[]).filter(t=>!t.done).length;
+  const guardrailCount=(d.guardrails||[]).length;
+  const urg=urgency(member,data);
+  const urgColor=URG[urg]?.color||"#3fb950";
+  const col=COL_MAP[member.step]||COL_MAP["—"];
+  const [hover,setHover]=useState(false);
+
+  return React.createElement("div",{
+    onClick,
+    onMouseEnter:()=>setHover(true),
+    onMouseLeave:()=>setHover(false),
+    style:{background:BG3,border:`1px solid ${hover?col.color:BORDER}`,borderRadius:8,padding:"10px 12px",cursor:"pointer",display:"flex",flexDirection:"column",gap:6,boxShadow:hover?`0 0 12px ${col.glow}`:"none",transition:"border-color 0.15s,box-shadow 0.15s"}
+  },
+    React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+      React.createElement("span",{style:{fontSize:14,fontWeight:600,color:TEXT,lineHeight:1.3}},member.name),
+      React.createElement("div",{style:{display:"flex",gap:5,alignItems:"center"}},
+        guardrailCount>0&&React.createElement("span",{style:{fontSize:10,color:"#d29922"}},"🚫"),
+        React.createElement("span",{style:{width:8,height:8,borderRadius:"50%",background:urgColor,display:"inline-block",flexShrink:0,boxShadow:`0 0 6px ${urgColor}`}})
+      )
+    ),
+    React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+      React.createElement("span",{style:{fontSize:12,color:lc===null?TEXT2:lc>=14?"#f85149":lc>=7?"#d29922":"#3fb950"}},lc===null?"No contact logged":lc===0?"Today":`${lc}d ago`),
+      open>0&&React.createElement("span",{style:{fontSize:11,background:"#2d2008",color:"#d29922",padding:"2px 7px",borderRadius:10,fontWeight:700}},`${open} open`)
+    )
+  );
+}
+
+function App(){
+  const [data,setData]=useState({});
+  const [selected,setSelected]=useState(null);
+  const [search,setSearch]=useState("");
+  const [loaded,setLoaded]=useState(false);
+
+  useEffect(()=>{
+    const stored=lsGet(STORAGE_KEY);
+    if(stored){setData({...SEED_DATA,...stored});}
+    else{setData(SEED_DATA);lsSet(STORAGE_KEY,SEED_DATA);}
+    setLoaded(true);
+  },[]);
+
+  function saveMember(id,updates){
+    const next={...data,[id]:{...(data[id]||{}),...updates}};
+    setData(next);
+    lsSet(STORAGE_KEY,next);
+  }
+
+  const members=useMemo(()=>{
+    if(!search)return ALL_MEMBERS;
+    return ALL_MEMBERS.filter(m=>m.name.toLowerCase().includes(search.toLowerCase()));
+  },[search]);
+
+  const byCol=useMemo(()=>{
+    const g={};
+    COLS.forEach(c=>g[c.key]=[]);
+    members.forEach(m=>{if(g[m.step])g[m.step].push(m);});
+    return g;
+  },[members]);
+
+  const stats=useMemo(()=>({
+    red:ALL_MEMBERS.filter(m=>["red","expired"].includes(urgency(m,data))).length,
+    amber:ALL_MEMBERS.filter(m=>urgency(m,data)==="amber").length,
+    green:ALL_MEMBERS.filter(m=>urgency(m,data)==="green").length,
+  }),[data]);
+
+  const now=new Date();
+  const timeStr=now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
+  const dateStr=now.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"});
+
+  if(!loaded)return React.createElement("div",{style:{background:BG,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:TEXT2,fontSize:14,fontFamily:FONT}},"LOADING COMMAND CENTER...");
+
+  return React.createElement("div",{style:{background:BG,minHeight:"100vh",fontFamily:FONT,color:TEXT,paddingBottom:24}},
+    React.createElement("div",{style:{background:BG2,borderBottom:`1px solid ${BORDER}`,padding:"12px 20px",display:"flex",justifyContent:"space-between",alignItems:"center"}},
+      React.createElement("div",null,
+        React.createElement("p",{style:{margin:0,fontSize:11,color:TEXT2,letterSpacing:2,fontWeight:700}},"DECENTRALIZED MASTERS"),
+        React.createElement("p",{style:{margin:0,fontSize:20,fontWeight:700,color:TEXT,letterSpacing:1}},"MEMBER COMMAND CENTER")
+      ),
+      React.createElement("div",{style:{textAlign:"right"}},
+        React.createElement("p",{style:{margin:0,fontSize:20,fontWeight:700,color:TEXT3,letterSpacing:2}},timeStr),
+        React.createElement("p",{style:{margin:0,fontSize:11,color:TEXT2}},dateStr)
+      )
+    ),
+    React.createElement("div",{style:{background:BG3,borderBottom:`1px solid ${BORDER}`,padding:"10px 20px",display:"flex",gap:24,alignItems:"center",flexWrap:"wrap"}},
+      React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8}},
+        React.createElement("span",{style:{width:10,height:10,borderRadius:"50%",background:"#f85149",boxShadow:"0 0 8px #f85149",display:"inline-block"}}),
+        React.createElement("span",{style:{fontSize:13,color:TEXT}},"CRITICAL"),
+        React.createElement("span",{style:{fontSize:20,fontWeight:700,color:"#f85149"}},stats.red)
+      ),
+      React.createElement("div",{style:{width:1,height:24,background:BORDER}}),
+      React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8}},
+        React.createElement("span",{style:{width:10,height:10,borderRadius:"50%",background:"#d29922",boxShadow:"0 0 8px #d29922",display:"inline-block"}}),
+        React.createElement("span",{style:{fontSize:13,color:TEXT}},"FOLLOW UP"),
+        React.createElement("span",{style:{fontSize:20,fontWeight:700,color:"#d29922"}},stats.amber)
+      ),
+      React.createElement("div",{style:{width:1,height:24,background:BORDER}}),
+      React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8}},
+        React.createElement("span",{style:{width:10,height:10,borderRadius:"50%",background:"#3fb950",boxShadow:"0 0 8px #3fb950",display:"inline-block"}}),
+        React.createElement("span",{style:{fontSize:13,color:TEXT}},"ON TRACK"),
+        React.createElement("span",{style:{fontSize:20,fontWeight:700,color:"#3fb950"}},stats.green)
+      ),
+      React.createElement("div",{style:{marginLeft:"auto"}},
+        React.createElement("input",{value:search,onChange:e=>setSearch(e.target.value),placeholder:"SEARCH MEMBER...",style:{fontSize:13,borderRadius:6,border:`1px solid ${BORDER}`,padding:"7px 12px",background:BG4,color:TEXT,fontFamily:FONT,letterSpacing:0.5,width:200,outline:"none"}})
+      )
+    ),
+    React.createElement("div",{style:{overflowX:"auto",padding:"16px 20px"}},
+      React.createElement("div",{style:{display:"flex",gap:12,minWidth:"max-content"}},
+        COLS.filter(c=>c.key!=="Advanced").map(col=>{
+          const mems=byCol[col.key]||[];
+          return React.createElement("div",{key:col.key,style:{width:190,flexShrink:0,display:"flex",flexDirection:"column",gap:8}},
+            React.createElement("div",{style:{background:BG3,border:`1px solid ${col.color}`,borderRadius:8,padding:"8px 12px",textAlign:"center",boxShadow:`0 0 12px ${col.glow}`}},
+              React.createElement("p",{style:{margin:0,fontSize:11,fontWeight:700,color:col.color,letterSpacing:2}},col.label),
+              React.createElement("p",{style:{margin:0,fontSize:22,fontWeight:700,color:TEXT}},mems.length)
+            ),
+            React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:6,maxHeight:520,overflowY:"auto",paddingRight:2}},
+              mems.map(m=>React.createElement(Card,{key:m.id,member:m,data,onClick:()=>setSelected(m)})),
+              mems.length===0&&React.createElement("p",{style:{fontSize:12,color:TEXT2,textAlign:"center",padding:"12px 0",margin:0,opacity:0.4}},"—")
+            )
+          );
+        })
+      )
+    ),
+    selected&&React.createElement(Detail,{member:selected,data,onSave:saveMember,onClose:()=>setSelected(null)})
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+</script>
+</body>
+</html>
